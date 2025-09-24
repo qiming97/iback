@@ -4,21 +4,27 @@ FROM node:18-alpine
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 和 yarn.lock
+# 安装必要的系统依赖 (sqlite3 可能需要)
+RUN apk add --no-cache python3 make g++ sqlite
+
+# 全局安装 pnpm
+RUN npm install -g pnpm
+
+# 复制 package.json 和 pnpm-lock.yaml
 COPY package*.json ./
-COPY yarn.lock ./
+COPY pnpm-lock.yaml ./
 
 # 安装依赖
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # 复制源代码
 COPY . .
 
 # 构建应用
-RUN yarn build
+RUN pnpm run build
 
 # 暴露端口
 EXPOSE 3000
 
 # 启动应用
-CMD ["yarn", "start:prod"]
+CMD ["pnpm", "start:prod"]

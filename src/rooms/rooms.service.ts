@@ -9,7 +9,7 @@ import { JoinRoomDto, JoinRoomByCodeDto } from './dto/join-room.dto';
 import { QueryRoomsDto } from './dto/query-rooms.dto';
 import { UserRole } from '../users/entities/user.entity';
 import { CustomLoggerService } from '../common/logger/logger.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class RoomsService {
