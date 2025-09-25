@@ -14,8 +14,8 @@ RUN npm install -g pnpm
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
-# 安装依赖
-RUN pnpm install --frozen-lockfile
+# 安装依赖 - 使用 --no-frozen-lockfile 以防止同步问题
+RUN pnpm install --no-frozen-lockfile
 
 # 复制源代码
 COPY . .
