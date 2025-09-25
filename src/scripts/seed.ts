@@ -1,117 +1,121 @@
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import * as dotenv from 'dotenv';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Room, RoomStatus } from '../rooms/entities/room.entity';
 import { RoomMember } from '../rooms/entities/room-member.entity';
+import { dbConfig, adminConfig, featuresConfig } from '../config';
 
-// Load environment variables
-dotenv.config();
-
-// Create DataSource with environment configuration
+// Create DataSource using config
 const createDataSource = () => {
-  const dbType = process.env.DB_TYPE || 'sqlite';
-
-  if (dbType === 'sqlite') {
-    return new DataSource({
-      type: 'sqlite',
-      database: process.env.DB_DATABASE || './data/interview_system.db',
-      entities: [User, Room, RoomMember],
-      synchronize: process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV === 'development',
-      logging: process.env.DB_LOGGING === 'true' || process.env.NODE_ENV === 'development',
-    });
-  } else {
-    const mysqlConfig: any = {
-      type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: +process.env.DB_PORT || 3306,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      entities: [User, Room, RoomMember],
-      synchronize: process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV === 'development',
-      logging: process.env.DB_LOGGING === 'true' || process.env.NODE_ENV === 'development',
-      charset: process.env.DB_CHARSET || 'utf8mb4',
-      timezone: process.env.DB_TIMEZONE || '+08:00',
-    };
-
-    // 添加SSL配置
-    if (process.env.DB_SSL === 'true') {
-      mysqlConfig.ssl = {
-        rejectUnauthorized: false
-      };
-    } else if (process.env.DB_SSL === 'false') {
-      mysqlConfig.ssl = false;
-    }
-
-    // 添加连接池配置
-    const connectionLimit = process.env.DB_CONNECTION_LIMIT;
-    if (connectionLimit) {
-      mysqlConfig.extra = {
-        connectionLimit: +connectionLimit,
-      };
-    }
-
-    return new DataSource(mysqlConfig);
-  }
+  return new DataSource({
+    type: dbConfig.type as any,
+    host: dbConfig.host,
+    port: dbConfig.port,
+    username: dbConfig.username,
+    password: dbConfig.password,
+    database: dbConfig.database,
+    entities: [User, Room, RoomMember],
+    synchronize: dbConfig.synchronize,
+    logging: dbConfig.logging,
+    charset: dbConfig.charset,
+    timezone: dbConfig.timezone,
+    ssl: dbConfig.ssl,
+    extra: dbConfig.connectionLimit ? {
+      connectionLimit: dbConfig.connectionLimit,
+    } : undefined,
+  } as any);
 };
 
-const AppDataSource = createDataSource();
-
 export async function seed() {
+  console.log(`🚀 Starting database seeding with ${dbConfig.type} configuration...`);
+  
+  const dataSource = createDataSource();
+
   try {
-    console.log(`🚀 Starting database seeding with ${process.env.DB_TYPE || 'sqlite'} configuration...`);
+    await dataSource.initialize();
+    console.log('✅ Database connection established');
 
-    await AppDataSource.initialize();
-    console.log('✅ Database connected successfully');
+    // 获取仓库
+    const userRepository = dataSource.getRepository(User);
+    const roomRepository = dataSource.getRepository(Room);
 
-    const userRepository = AppDataSource.getRepository(User);
-    const roomRepository = AppDataSource.getRepository(Room);
-
-    // Create admin user
-    const adminExists = await userRepository.findOne({
-      where: { username: 'admin' }
+    // 检查是否已经有管理员用户
+    const existingAdmin = await userRepository.findOne({
+      where: { username: adminConfig.username }
     });
 
-    if (!adminExists) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      const admin = userRepository.create({
-        username: 'admin',
+    if (existingAdmin) {
+      console.log('👤 Admin user already exists, skipping creation');
+    } else {
+      // 创建管理员用户
+      console.log('👤 Creating admin user...');
+      const hashedPassword = await bcrypt.hash(adminConfig.password, 12);
+      
+      const adminUser = userRepository.create({
+        username: adminConfig.username,
         password: hashedPassword,
         role: UserRole.ADMIN,
         isActive: true,
       });
-      await userRepository.save(admin);
-      console.log('✅ Admin user created: admin / admin123');
-    } else {
-      console.log('ℹ️  Admin user already exists');
+
+      await userRepository.save(adminUser);
+      console.log(`✅ Admin user created: ${adminConfig.username}`);
     }
 
-    // Create test user
-    const testUserExists = await userRepository.findOne({
-      where: { username: 'testuser' }
-    });
+    // 检查是否已经有示例房间
+    const existingRooms = await roomRepository.count();
+    
+    if (existingRooms === 0) {
+      console.log('🏠 Creating sample rooms...');
+      
+      // 创建示例房间
+      const sampleRooms = [
+        {
+          name: 'Frontend Interview Room',
+          description: 'A room for frontend development interviews',
+          roomCode: 'FRONT1',
+          status: RoomStatus.NORMAL,
+        },
+        {
+          name: 'Backend Interview Room',
+          description: 'A room for backend development interviews',
+          roomCode: 'BACK01',
+          status: RoomStatus.NORMAL,
+        },
+        {
+          name: 'Full Stack Interview Room',
+          description: 'A room for full stack development interviews',
+          roomCode: 'FULL01',
+          status: RoomStatus.NORMAL,
+        }
+      ];
 
-    if (!testUserExists) {
-      const hashedPassword = await bcrypt.hash('test123', 10);
-      const testUser = userRepository.create({
-        username: 'testuser',
-        password: hashedPassword,
-        role: UserRole.USER,
-        isActive: true,
-      });
-      await userRepository.save(testUser);
-      console.log('✅ Test user created: testuser / test123');
+      for (const roomData of sampleRooms) {
+        const room = roomRepository.create(roomData);
+        await roomRepository.save(room);
+        console.log(`✅ Sample room created: ${roomData.name} (${roomData.roomCode})`);
+      }
     } else {
-      console.log('ℹ️  Test user already exists');
+      console.log('🏠 Sample rooms already exist, skipping creation');
     }
+
+    console.log('✅ Database seeding completed successfully');
 
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
-    process.exit(1);
+    console.error('❌ Database seeding failed:', error);
+    throw error;
   } finally {
-    await AppDataSource.destroy();
-    console.log('📦 Database connection closed');
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+      console.log('📤 Database connection closed');
+    }
   }
 }
 
+// 如果直接运行此脚本
+if (require.main === module) {
+  seed().catch((error) => {
+    console.error('Fatal error during seeding:', error);
+    process.exit(1);
+  });
+}

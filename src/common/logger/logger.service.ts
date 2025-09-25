@@ -1,6 +1,7 @@
 import { Injectable, LoggerService } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { loggerConfig } from '../../config';
 
 @Injectable()
 export class CustomLoggerService implements LoggerService {
@@ -8,7 +9,7 @@ export class CustomLoggerService implements LoggerService {
   private logsDir: string;
 
   constructor() {
-    this.logLevel = process.env.LOG_LEVEL || 'info';
+    this.logLevel = loggerConfig.level;
     this.logsDir = path.join(process.cwd(), 'logs');
 
     // Create logs directory if it doesn't exist
