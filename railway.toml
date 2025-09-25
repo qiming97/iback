@@ -10,3 +10,8 @@ restartPolicyMaxRetries = 10
 
 [variables]
 NODE_ENV = "production"
+DB_TYPE = "mysql"
+DB_SYNCHRONIZE = "true"
+DB_LOGGING = "false"
+DB_CHARSET = "utf8mb4"
+DB_TIMEZONE = "+00:00"

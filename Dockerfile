@@ -4,8 +4,8 @@ FROM node:20-alpine
 # 设置工作目录
 WORKDIR /app
 
-# 安装必要的系统依赖 (sqlite3 可能需要)
-RUN apk add --no-cache python3 make g++ sqlite
+# 安装必要的系统依赖 (MySQL 客户端编译需要)
+RUN apk add --no-cache python3 make g++
 
 # 全局安装 pnpm
 RUN npm install -g pnpm

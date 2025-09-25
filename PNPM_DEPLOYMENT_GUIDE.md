@@ -115,25 +115,47 @@ pnpm start:prod
 - ✅ 验证数据库连接
 - ✅ 测试 WebSocket 连接
 
-## 🐛 可能的问题和解决方案
+## 🐛 已修复的问题
 
-### 问题1：依赖安装失败
+### ✅ 问题1：crypto.randomUUID 未定义
+**问题**：
+```
+ReferenceError: crypto is not defined
+at generateString (/app/node_modules/.pnpm/@nestjs+typeorm@11.0.0.../typeorm.utils.js:123:37)
+```
+
+**解决方案**：
+- 升级 Docker 镜像到 `node:20-alpine`
+- 添加了 `src/polyfills.ts` 文件提供 crypto polyfill
+- 在 `main.ts` 中导入 polyfill
+
+### ✅ 问题2：SQLite longtext 数据类型不支持
+**问题**：
+```
+DataTypeNotSupportedError: Data type "longtext" in "Room.content" is not supported by "sqlite" database.
+```
+
+**解决方案**：
+- 将 `Room.content` 字段从 `longtext` 改为 `text`
+- `text` 类型在 SQLite 和 MySQL 中都受支持
+
+### 问题3：依赖安装失败
 **解决方案**：
 - 确保 `pnpm-lock.yaml` 文件已提交到仓库
 - 检查 Railway 构建日志中的错误信息
 - 必要时可以删除 `node_modules` 重新安装
 
-### 问题2：SQLite3 编译错误
+### 问题4：SQLite3 编译错误
 **解决方案**：
 - Dockerfile 中已添加必要的系统依赖：`python3 make g++ sqlite`
 - 如果仍有问题，可以考虑使用预编译的 SQLite3 版本
 
-### 问题3：启动命令错误
+### 问题5：启动命令错误
 **解决方案**：
 - 确保 Railway 配置中使用 `pnpm start:prod`
 - 检查 package.json 中的脚本是否正确
 
-### 问题4：环境变量
+### 问题6：环境变量
 **解决方案**：
 - 在 Railway 项目设置中配置必要的环境变量
 - 确保 `NODE_ENV=production` 已设置

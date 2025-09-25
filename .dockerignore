@@ -17,6 +17,7 @@ logs
 *.sqlite
 *.db
 data/
+mysql.env.example
 test-*.js
 yarn.lock
 .yarnrc
