@@ -10,7 +10,10 @@ import { setupYjsWebSocketServer } from './yjs-websocket-server';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import {seed} from './scripts/seed'
 async function bootstrap() {
+  // 只在开发环境或明确指定时运行种子脚本
+  if (process.env.NODE_ENV === 'development' || process.env.RUN_SEED === 'true') {
     await seed();
+  }
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
