@@ -37,7 +37,9 @@ const createDataSource = () => {
 
     // 添加SSL配置
     if (process.env.DB_SSL === 'true') {
-      mysqlConfig.ssl = true;
+      mysqlConfig.ssl = {
+        rejectUnauthorized: false
+      };
     } else if (process.env.DB_SSL === 'false') {
       mysqlConfig.ssl = false;
     }

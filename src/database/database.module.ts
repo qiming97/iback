@@ -37,7 +37,9 @@ import { RoomMember } from '../rooms/entities/room-member.entity';
 
           // 添加SSL配置
           if (configService.get('DB_SSL') === 'true') {
-            mysqlConfig.ssl = true;
+            mysqlConfig.ssl = {
+              rejectUnauthorized: false
+            };
           } else if (configService.get('DB_SSL') === 'false') {
             mysqlConfig.ssl = false;
           }
