@@ -62,42 +62,7 @@ export async function seed() {
       console.log(`✅ Admin user created: ${adminConfig.username}`);
     }
 
-    // 检查是否已经有示例房间
-    const existingRooms = await roomRepository.count();
-    
-    if (existingRooms === 0) {
-      console.log('🏠 Creating sample rooms...');
-      
-      // 创建示例房间
-      const sampleRooms = [
-        {
-          name: 'Frontend Interview Room',
-          description: 'A room for frontend development interviews',
-          roomCode: 'FRONT1',
-          status: RoomStatus.NORMAL,
-        },
-        {
-          name: 'Backend Interview Room',
-          description: 'A room for backend development interviews',
-          roomCode: 'BACK01',
-          status: RoomStatus.NORMAL,
-        },
-        {
-          name: 'Full Stack Interview Room',
-          description: 'A room for full stack development interviews',
-          roomCode: 'FULL01',
-          status: RoomStatus.NORMAL,
-        }
-      ];
-
-      for (const roomData of sampleRooms) {
-        const room = roomRepository.create(roomData);
-        await roomRepository.save(room);
-        console.log(`✅ Sample room created: ${roomData.name} (${roomData.roomCode})`);
-      }
-    } else {
-      console.log('🏠 Sample rooms already exist, skipping creation');
-    }
+  
 
     console.log('✅ Database seeding completed successfully');
 
